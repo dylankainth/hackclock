@@ -1,0 +1,26 @@
+{
+  "name": "hackclock",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "serve": "node tools/serve.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:e2e": "node test/e2e.mjs",
+    "test:offline": "node test/offline.mjs",
+    "icons": "python3 tools/make-icons.py src/assets"
+  },
+  "dependencies": {
+    "jsqr": "^1.4.0",
+    "qrcode-generator": "^2.0.4"
+  },
+  "devDependencies": {
+    "@fontsource/barlow-semi-condensed": "*",
+    "@sparticuz/chromium": "^153.0.0",
+    "esbuild": "*",
+    "node-datachannel": "*",
+    "playwright": "*"
+  },
+  "description": "Serverless hackathon countdown: run it on a laptop, show it on a phone over WebRTC paired by QR code."
+}

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hackclock</title>
+<meta name="theme-color" content="#0b1626">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hackclock">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<!--STYLE-->
+</head>
+<body>
+
+<!-- ============ Landing ============ -->
+<section id="landing" class="landing" hidden>
+  <div class="landing-inner">
+    <h1 class="wordmark">Hackclock</h1>
+    <p class="lede">A countdown you run on your laptop and show on your phone. No account, no server.</p>
+    <div class="role-buttons">
+      <button class="btn big primary" data-role="controller">Run the clock on this laptop</button>
+      <button class="btn big" data-role="display">Show the clock on this phone</button>
+    </div>
+    <p class="fine">Both devices need to be on the same Wi-Fi, or on the phone's hotspot.</p>
+  </div>
+</section>
+
+<!-- ============ Controller (laptop) ============ -->
+<section id="controller" class="controller" hidden>
+  <header class="bar">
+    <h1 class="brand">Hackclock</h1>
+    <ul id="peerStrip" class="peers" aria-label="Paired displays"></ul>
+    <button id="pairBtn" class="btn primary">Pair a display</button>
+    <button id="switchRole" class="btn quiet" title="Go back to the role picker">Switch role</button>
+  </header>
+
+  <div class="ctl-grid">
+    <aside class="timers" aria-label="Timers">
+      <h2>Timers</h2>
+      <ol id="timerList" class="timer-list"></ol>
+      <button id="addTimer" class="btn">Add timer</button>
+      <label class="check"><input type="checkbox" id="chimeToggle"> Chime at zero</label>
+    </aside>
+
+    <main class="stage">
+      <div id="ctlFace" class="face-host"></div>
+      <div class="controls">
+        <button id="btnStart" class="btn big primary">Start <kbd>Space</kbd></button>
+        <button id="btnReset" class="btn big">Reset <kbd>R</kbd></button>
+        <div class="nudges" role="group" aria-label="Adjust time">
+          <button class="btn" data-nudge="-10">−10 s</button>
+          <button class="btn" data-nudge="10">+10 s</button>
+          <button class="btn" data-nudge="60">+1 min</button>
+        </div>
+        <div class="nav" role="group" aria-label="Switch timer">
+          <button id="btnPrev" class="btn">Previous <kbd>←</kbd></button>
+          <button id="btnNext" class="btn">Next <kbd>→</kbd></button>
+        </div>
+      </div>
+    </main>
+  </div>
+</section>
+
+<!-- ============ Display (phone) ============ -->
+<section id="display" class="display" hidden>
+  <div id="dispScan" class="disp-panel" hidden>
+    <h1>Scan the laptop's code</h1>
+    <p class="sub">On the laptop, choose <strong>Pair a display</strong>. Then scan the code it shows.</p>
+    <div class="viewfinder"><video id="dispVideo" playsinline muted></video></div>
+    <p id="dispScanMsg" class="msg" role="status"></p>
+    <div class="row">
+      <button id="dispCamBtn" class="btn big primary">Open camera</button>
+    </div>
+    <details class="paste">
+      <summary>Paste the code instead</summary>
+      <textarea id="dispPaste" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="v1oX~…"></textarea>
+      <button id="dispPasteBtn" class="btn">Connect</button>
+    </details>
+    <button class="btn quiet" data-action="switch">Switch role</button>
+  </div>
+
+  <div id="dispAnswer" class="disp-panel" hidden>
+    <h1>Show this to the laptop's camera</h1>
+    <p class="sub">Hold the phone steady, about 30 cm from the laptop's webcam. Turn the screen brightness up.</p>
+    <div id="dispQr" class="qr-card"></div>
+    <p id="dispAnswerMsg" class="msg" role="status">Waiting for the laptop…</p>
+    <div class="row">
+      <button id="dispCopy" class="btn">Copy code</button>
+      <button id="dispAgain" class="btn quiet">Start over</button>
+    </div>
+  </div>
+
+  <div id="dispLive" class="disp-live" hidden>
+    <div id="dispFace" class="face-host full"></div>
+    <div id="hud" class="hud" data-show="true">
+      <span id="hudLink" class="pill" data-state="live">Connected</span>
+      <span id="hudAwake" class="pill" hidden>Screen stays on</span>
+      <span class="spacer"></span>
+      <button id="hudRotate" class="btn small">Rotate</button>
+      <button id="hudFull" class="btn small">Fullscreen</button>
+      <button id="hudRepair" class="btn small">Pair again</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Pair dialog (controller) ============ -->
+<dialog id="pairDlg" class="dlg wide" aria-labelledby="pairTitle">
+  <form method="dialog" class="dlg-head">
+    <h2 id="pairTitle">Pair a display</h2>
+    <button class="btn quiet" value="close">Close</button>
+  </form>
+  <div class="pair-grid">
+    <section class="pair-step">
+      <h3>Scan this with the phone</h3>
+      <p class="sub">Use the phone's camera app, or open Hackclock on the phone and choose <strong>Show the clock</strong>.</p>
+      <div id="offerQr" class="qr-card" aria-live="polite"></div>
+      <div class="row">
+        <button id="copyLink" class="btn small">Copy link</button>
+        <button id="copyOffer" class="btn small">Copy code</button>
+      </div>
+    </section>
+    <section class="pair-step">
+      <h3>Show the phone's code to this camera</h3>
+      <p class="sub">After scanning, the phone displays a code of its own. Hold it up here.</p>
+      <div class="viewfinder"><video id="pairVideo" playsinline muted></video></div>
+      <p id="pairMsg" class="msg" role="status"></p>
+      <details class="paste">
+        <summary>Can't scan? Paste the phone's code</summary>
+        <textarea id="pairPaste" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="v1aA~…"></textarea>
+        <button id="pairPasteBtn" class="btn">Connect</button>
+      </details>
+    </section>
+  </div>
+</dialog>
+
+<!-- ============ Timer dialog ============ -->
+<dialog id="timerDlg" class="dlg" aria-labelledby="timerDlgTitle">
+  <form id="timerForm" method="dialog">
+    <div class="dlg-head">
+      <h2 id="timerDlgTitle">Add timer</h2>
+    </div>
+    <label class="field">
+      <span>Name</span>
+      <input id="tfLabel" type="text" maxlength="40" placeholder="Pitch" autocomplete="off" required>
+    </label>
+    <div class="field-row">
+      <label class="field">
+        <span>Minutes</span>
+        <input id="tfMin" type="number" inputmode="numeric" min="0" max="599" value="3" required>
+      </label>
+      <label class="field">
+        <span>Seconds</span>
+        <input id="tfSec" type="number" inputmode="numeric" min="0" max="59" value="0" required>
+      </label>
+      <label class="field">
+        <span>Turn amber at (seconds left)</span>
+        <input id="tfWarn" type="number" inputmode="numeric" min="0" max="3599" placeholder="auto">
+      </label>
+    </div>
+    <p id="tfError" class="msg error" role="alert" hidden></p>
+    <div class="dlg-actions">
+      <button id="tfDelete" type="button" class="btn danger" hidden>Remove timer</button>
+      <span class="spacer"></span>
+      <button id="tfCancel" type="button" class="btn quiet">Cancel</button>
+      <button id="tfSave" type="submit" class="btn primary">Save timer</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<!--SCRIPT-->
+</body>
+</html>
